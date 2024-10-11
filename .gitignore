@@ -1,3 +1,10 @@
+#PYTHON SPECIFIC
 .venv/*
 .env
 venv
+
+
+# NODE/JS SPECIFIC
+node_modules
+
+python_version
