@@ -49,7 +49,7 @@ function formatBytes(size) {
 }
 
 // Function to get Proxmox statistics
-async function getProxmox() {
+async function getProxmoxStats() {
     const headers = {
         'Authorization': `PVEAPIToken=${PVE_TOKEN_ID}=${PVE_SECRET}`
     };
@@ -85,3 +85,13 @@ async function getProxmox() {
         console.error('Error:', error);
     }
 }
+
+module.exports = {
+	data: new SlashCommandBuilder()
+		.setName('proxmoxstats')
+		.setDescription('Replies with the status of the target Proxmox cluster!'),
+	async execute(interaction) {
+        const status = await getProxmoxStats();
+		await interaction.reply(status);
+	},
+};
