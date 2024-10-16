@@ -25,8 +25,6 @@ function getProxmox() {
 
             const nodes = clusterResources.filter((item) => item.type == 'node');
 
-            console.log("NODES",nodes);
-
             const status = nodes.reduce((acc, node) => {
 
                 if (node.status == "online") {
@@ -39,9 +37,7 @@ function getProxmox() {
 
             }, "");
 
-            console.log("STATUS", status);
-
-            return "==========================================\n" + status + "==========================================";
+            return status;
         }
         else {
             console.error('Failed response:', response);
@@ -62,7 +58,6 @@ module.exports = {
         .setDescription('Replies with the status of the target Proxmox cluster!'),
     async execute(interaction) {
         const status = await getProxmox();
-        
         await interaction.reply(status);
     },
 };

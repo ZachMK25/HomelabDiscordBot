@@ -23,7 +23,7 @@ function getHardwareStats(nodes) {
         usedDisk += node.disk;
     });
 
-    return {
+    const stats =  {
         maxcpu: maxCPU,
         cpu: usedCPU,
         maxmem: maxRAM,
@@ -31,6 +31,8 @@ function getHardwareStats(nodes) {
         maxdisk: maxDisk,
         disk: usedDisk
     };
+
+    return stats;
 }
 
 // Function to format bytes
@@ -57,32 +59,35 @@ async function getProxmoxStats() {
     try {
         const response = await get(`https://${PVE_URL}/api2/json/cluster/resources`, {
             headers: headers,
+            // Reject unauthorized cert since proxmox instance does not provide one on its management interface by default
             httpsAgent: new Agent({ rejectUnauthorized: false })
         });
 
         if (response.status === 200) {
             const clusterResources = response.data.data;
-            const nodes = clusterResources.filter(item => item.type === 'node' && item.status === 'online');
+            const nodes = clusterResources.filter(item => item.type == 'node' && item.status == 'online');
 
             const hardwareStats = getHardwareStats(nodes);
 
-            let stats = "==========================================";
+            let stats = "";
             
-            stats += 'Hardware Stats:', hardwareStats + "\n";
-            stats += 'CPU Usage:', (hardwareStats.cpu / hardwareStats.maxcpu * 100).toFixed(2) + '%' + '\n';
-            stats += 'vCPUs:', hardwareStats.maxcpu + '\n';
-            stats += 'Max RAM:', formatBytes(hardwareStats.maxmem) + '\n';
-            stats += 'Used Disk:', formatBytes(hardwareStats.disk) + '\n';
+            stats += 'Hardware Stats:\n';
+            stats += 'vCPUs: ' + hardwareStats.maxcpu + '\n';
+            stats += 'RAM: ' + formatBytes(hardwareStats.maxmem) + '\n';
+            stats += 'Storage: ' + formatBytes(hardwareStats.maxdisk) + '\n';
+            stats += 'CPU Usage: ' + (hardwareStats.cpu / hardwareStats.maxcpu * 100).toFixed(2) + '%' + '\n';
+            stats += 'RAM Usage: ' + (hardwareStats.mem / hardwareStats.maxmem * 100).toFixed(2) + '%' + '\n';
+            stats += 'Disk Usage: ' + (hardwareStats.disk / hardwareStats.maxdisk * 100).toFixed(2) + '%' + '\n';
 
-            stats += "==========================================";
-            
             return stats;
 
         } else {
             console.error('Failed response:', response);
+            return "Proxmox instance returned code " + response.status;
         }
     } catch (error) {
         console.error('Error:', error);
+        return "Error Connecting to Proxmox Cluster";
     }
 }
 
