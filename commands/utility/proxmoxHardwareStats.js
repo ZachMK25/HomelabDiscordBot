@@ -11,8 +11,7 @@ const PVE_URL = process.env.PVE_URL;
 
 function getHardwareStats(nodes) {
     
-    let maxCPU = 0, maxRAM = 0, maxDisk = 0;
-    let usedCPU = 0, usedRAM = 0, usedDisk = 0;
+    let maxCPU = 0, maxRAM = 0, maxDisk = 0, usedCPU = 0, usedRAM = 0, usedDisk = 0, avgCPU = 0;
 
     nodes.forEach(node => {
         maxCPU += node.maxcpu;
@@ -21,7 +20,10 @@ function getHardwareStats(nodes) {
         usedCPU += node.cpu;
         usedRAM += node.mem;
         usedDisk += node.disk;
+        avgCPU += node.cpu;
     });
+
+    
 
     const stats =  {
         maxcpu: maxCPU,
@@ -29,7 +31,8 @@ function getHardwareStats(nodes) {
         maxmem: maxRAM,
         mem: usedRAM,
         maxdisk: maxDisk,
-        disk: usedDisk
+        disk: usedDisk,
+        avgcpu: avgCPU / nodes.length
     };
 
     return stats;
@@ -71,11 +74,12 @@ async function getProxmoxStats() {
 
             let stats = "";
             
-            stats += 'Hardware Stats:\n';
+            stats += 'Hardware Stats for Cluster:\n';
             stats += 'vCPUs: ' + hardwareStats.maxcpu + '\n';
             stats += 'RAM: ' + formatBytes(hardwareStats.maxmem) + '\n';
             stats += 'Storage: ' + formatBytes(hardwareStats.maxdisk) + '\n';
-            stats += 'CPU Usage: ' + (hardwareStats.cpu / hardwareStats.maxcpu * 100).toFixed(2) + '%' + '\n';
+            // CPU usage is already a percentage
+            stats += 'CPU Usage: ' + (hardwareStats.avgcpu * 100).toFixed(2) + '%' + '\n';
             stats += 'RAM Usage: ' + (hardwareStats.mem / hardwareStats.maxmem * 100).toFixed(2) + '%' + '\n';
             stats += 'Disk Usage: ' + (hardwareStats.disk / hardwareStats.maxdisk * 100).toFixed(2) + '%' + '\n';
 
