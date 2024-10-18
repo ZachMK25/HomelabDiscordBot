@@ -6,7 +6,7 @@ const { pollProxmox } = require('./monitoring/proxmoxCluster.js');
 
 config();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const DEBUG_LOGGING = process.env.DEBUG_LOGGING
+const DEBUG_LOGGING = process.env.DEBUG_LOGGING === "true" || process.env.DEBUG_LOGGING === "True";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -63,7 +63,7 @@ async function monitorProxmox(){
 		return;
 	}
 
-	const log_all = process.env.ALERT_ALL_NODE_STATUSES;
+	const log_all = process.env.ALERT_ALL_NODE_STATUSES === "true" || process.env.ALERT_ALL_NODE_STATUSES === "True";
 	const channel = client.channels.cache.find(channel => channel.name === 'general');
 
 	let message = "";
