@@ -15,8 +15,10 @@ function getProxmox() {
         'Authorization': `PVEAPIToken=${PVE_TOKEN_ID}=${PVE_SECRET}`
     };
 
+    
     const out = get(`https://${PVE_URL}/api2/json/cluster/resources`, {
         headers: headers,
+        // Reject unauthorized cert since proxmox instance does not provide one on its management interface by default
         httpsAgent: new Agent({ rejectUnauthorized: false })
     }).then((response) => {
         if (response.status === 200) {

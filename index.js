@@ -2,9 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const { config } = require('dotenv');
+const { pollProxmox } = require('./monitoring/proxmoxCluster.js');
 
 config();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const DEBUG_LOGGING = process.env.DEBUG_LOGGING
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -52,3 +54,54 @@ client.on(Events.InteractionCreate, async interaction => {
 
 // Log in to Discord with your client's token
 client.login(DISCORD_TOKEN);
+
+async function monitorProxmox(){
+	const statuses = await pollProxmox();
+
+	if (statuses.error){
+		console.log(statuses.error);
+		return;
+	}
+
+	const log_all = process.env.ALERT_ALL_NODE_STATUSES;
+	const channel = client.channels.cache.find(channel => channel.name === 'general');
+
+	let message = "";
+
+	if (log_all) {
+		for (const [node, status] of statuses){
+			message += node + ": " + status + "\n";
+		}
+
+		if (DEBUG_LOGGING){
+			console.log("STATUSES:" , statuses);
+			console.log("Does message exist? " + (!(!message)));
+		}
+
+		if (message){
+			channel.send(message);
+		}
+		
+	}
+	else{
+		for (const [node, status] of statuses){
+			if (status === "offline"){
+				message += node + ": " + status + "\n";
+			}
+		}
+
+		if (DEBUG_LOGGING){
+			console.log("STATUSES:" , statuses);
+			console.log("Does message exist? " + (!(!message)));
+		}
+
+		if (message){
+			channel.send(message);
+		}
+		
+	}
+}
+
+const proxmoxPollInterval = process.env.PROXMOX_POLL_INTERVAL || 300000;
+
+setInterval(monitorProxmox, proxmoxPollInterval);
